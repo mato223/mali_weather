@@ -1,4 +1,12 @@
+import dash
+import plotly.graph_objects as go
+import pandas as pd
+
 from dash import Input, Output, State, dcc, html
+#from predictions import linearRegression, xgBoost
+
+# Charger les bases de données kayes_2023 et bamako_2023
+df = pd.read_csv("data/bamako_hourly-2000_2023.csv")
 
 layout = html.Div([
     html.H1("Home Page"),

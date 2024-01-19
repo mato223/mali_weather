@@ -1,3 +1,4 @@
+from flask import Flask
 import dash
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html
@@ -19,15 +20,19 @@ from pages import (
 )
 
 app = dash.Dash(
-    external_stylesheets=[dbc.themes.CYBORG],
+    external_stylesheets=[dbc.themes.MORPH],
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"}
     ],
 )
 
+#CERULEAN, COSMO, CYBORG, DARKLY, FLATLY, JOURNAL, LITERA, LUMEN, LUX, MATERIA, MINTY, MORPH, PULSE, QUARTZ, SANDSTONE, SIMPLEX, SKETCHY, SLATE, SOLAR, SPACELAB, SUPERHERO, UNITED, VAPOR, YETI, ZEPHYR.
+
+
 sidebar_header = dbc.Row(
     [
-        dbc.Col(html.H2("Météo", className="display-4", style={"color": "black"})),  # Couleur du texte en blanc
+        dbc.Col(html.H2("Météo", className="display-4", style={"color": '#2a9fd6'}
+                        ),style={"color": '#2a9fd6'}),  # Couleur du texte en blanc
         dbc.Col(
             [
                 html.Button(
@@ -48,6 +53,7 @@ sidebar_header = dbc.Row(
                         
                     },
                     id="sidebar-toggle",
+                    
                 ),
             ],
             width="auto",
@@ -65,24 +71,25 @@ sidebar = html.Div(
                 html.P(
                     "MALI WEATHER REPORT ",
                     className="lead",
-                    style={"color": "grey"},  # Couleur du texte en blanc
+                    style={"color": '#2a9fd6'},  # Couleur du texte en blanc
                 ),
             ],
             id="blurb",
+            style={"color": '#2a9fd6'}
         ),
         dbc.Collapse(
             dbc.Nav(
                 [
-                    dbc.NavLink("Accueil", href="/", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Bamako", href="/bamako", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Kayes", href="/kayes", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Koulikoro", href="/koulikoro", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Sikasso", href="/sikasso", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Segou", href="/segou", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Mopti", href="/mopti", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Tombouctou", href="/tombouctou", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Gao", href="/gao", active="exact", style={"color": "black"}),
-                    dbc.NavLink("Kidal", href="/kidal", active="exact", style={"color": "black"}),
+                    dbc.NavLink("ACCUEIL", href="/", active="exact", style={"color": "black"}),
+                    dbc.NavLink("BAMAKO", href="/bamako", active="exact", style={"color": "black"}),
+                    dbc.NavLink("KAYES", href="/kayes", active="exact", style={"color": "black"}),
+                    dbc.NavLink("KOULIKORO", href="/koulikoro", active="exact", style={"color": "black"}),
+                    dbc.NavLink("SIKASSO", href="/sikasso", active="exact", style={"color": "black"}),
+                    dbc.NavLink("SEGOU", href="/segou", active="exact", style={"color": "black"}),
+                    dbc.NavLink("MOPTI", href="/mopti", active="exact", style={"color": "black"}),
+                    dbc.NavLink("TOMBOUCTOU", href="/tombouctou", active="exact", style={"color": "black"}),
+                    dbc.NavLink("GAO", href="/gao", active="exact", style={"color": "black"}),
+                    dbc.NavLink("KIDAL", href="/kidal", active="exact", style={"color": "black"}),
                 ],
                 vertical=True,
                 pills=True,
@@ -149,6 +156,13 @@ def toggle_collapse(n, is_open):
     if n:
         return not is_open
     return is_open
+
+#@app.callback(
+#    Output('dd-output-container', 'children'),
+#    Input('demo-dropdown', 'value')
+#)
+#def update_output(value):
+#    return f'You have selected {value}'
 
 if __name__ == "__main__":
     app.run_server(debug=True)

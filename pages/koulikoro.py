@@ -1,99 +1,142 @@
-from dash import dcc, html, Output, Input
-import dash_bootstrap_components as dbc
+#<!--------------------------------------------importations---------------------------------------------------------------!>
+import dash
+import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
-import pandas as pd 
-from app import app
+import dash_bootstrap_components as dbc
+from holoviews.plotting.plotly.dash import to_dash
+from dash import Input, Output, State, dcc, html, Dash
 
-# Get data
-df_kayes_2023 = pd.read_csv("data/kayes_2023.csv")
-df_kayes_2000_2009 = pd.read_csv("data/kayes_2000-2009.csv")
-df_kayes_2010_2023 = pd.read_csv("data/kayes_2010_2023.csv")
-df_bamako_2022 = px.data.election()[:20]  # Remplacez par votre jeu de données réel
 
-# Create figure based on data
-fig_bar = px.bar(df_kayes_2023, x="temperature_2m_mean")
-fig_pie = px.pie(df_bamako_2022, names="district", values="Joly", title="Diagramme circulaire")
+#<!--------------------------------------------data-loading---------------------------------------------------------------!>
+app = Dash(__name__)
 
-# Layout de l'application Dash
-layout = html.Div(
-    [
-        # Section pour le diagramme à barres
-        html.Div(
-            [
-                # Titre de la section
-                html.H3("Diagramme à Barres"),
-                
-                # Ligne horizontale contenant les listes déroulantes
-                html.Div(
-                    [
-                        # Liste déroulante pour sélectionner le jeu de données
-                        dcc.Dropdown(
-                            options=[
-                                {"label": "2023", "value": "df_kayes_2023"},
-                                {"label": "2000_2009", "value": "df_kayes_2000_2009"},
-                                {"label": "2010_2023", "value": "df_kayes_2010_2023"},
-                            ],
-                            id="dataset-select",  # Identifiant unique de la liste déroulante
-                            value="df_kayes_2023",  # Valeur par défaut de la liste déroulante
-                            style={"width": "200px"},  # Largeur de la liste déroulante
-                        ),
-                        
-                        # Liste déroulante pour sélectionner les variables du diagramme à barres
-                        dcc.Dropdown(
-                            id="variable-select-bar",  # Identifiant unique de la liste déroulante
-                            multi=True,  # Permettre la sélection de plusieurs variables
-                            style={"width": "200px"},  # Largeur de la liste déroulante
-                            value="temperature_2m_mean"  # Valeur par défaut de la liste déroulante
-                        ),
-                    ],
-                    style={"display": "flex"},  # Afficher les composants côte à côte
+df_koulikoro_2023 = pd.read_csv("data/koulikoro_2023.csv")
+df_koulikoro_2023['daylight_duration_hours'] = df_koulikoro_2023['daylight_duration'] / 3600
+df_koulikoro_2023['sunshine_duration_hours'] = df_koulikoro_2023['sunshine_duration'] / 3600
+#df_koulikoro_2010_2023 = pd.read_csv("data/koulikoro_2010-2023.csv")
+
+
+
+#<!--------------------------------------------Fig---------------------------------------------------------------!>
+
+temperature_fig = px.line(df_koulikoro_2023, x='date', y='temperature_2m_mean', title='Variation de la Température Moyenne à koulikoro en 2023')
+
+precipitation_fig = px.histogram(df_koulikoro_2023, x='date', y='rain_sum', title='Somme des Précipitations à Koulikoro en 2023')
+
+wind_speed_fig = px.line(df_koulikoro_2023, x='date', y='wind_speed_10m_max', title='Variation de la Vitesse Maximale du Vent à koulikoro en 2023')
+
+daylight_sunshine = px.line(df_koulikoro_2023, x='date', y=['daylight_duration_hours', 'sunshine_duration_hours'],
+              title='Variation durée de la lumière du jour et durée d\'ensoleillement',
+              labels={'value': 'Valeur', 'variable': 'Variable', 'date': 'Date'})
+
+temperature_rain = px.line(df_koulikoro_2023, x='date', y=['temperature_2m_mean', 'rain_sum'],
+              title='Variation de la Température et des Précipitations au Fil du Temps',
+              labels={'value': 'Valeur', 'variable': 'Variable', 'date': 'Date'})
+
+rain_precipitaton = px.line(df_koulikoro_2023, x='date', y=['rain_sum', 'precipitation_hours'],
+              title='Variation des précipitations et nombre d\'heures des précipitations  ',
+              labels={'value': 'Valeur', 'variable': 'Variable', 'date': 'Date'})
+
+#<!--------------------------------------------layout---------------------------------------------------------------!>
+
+layout = html.Div([
+                    #<!--------------------Titre page---------------------------!>
+                    
+    html.H1("KOULIKORO REPORT", 
+            style={'textAlign': 'center',
+                    "color": '#2a9fd6'
+            }),
+    html.Hr(),
+                    #<!--------------------Region description---------------------------!>
+                    
+                dcc.Markdown(
+                    """
+                    **La région de Koulikoro, située dans le sud-ouest du Mali, présente un climat de type tropical, avec des caractéristiques propres à la région.**
+                    **Koulikoro se trouve dans une zone de climat tropical, influencée par sa proximité avec l'équateur. Cela se traduit par des températures élevées tout au long de l'année.**
+                    
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'border-radius': '10px', 'color': 'white'},
                 ),
+                html.Hr(),
+                    #<!--------------------temperature_fig---------------------------!>
+                dcc.Markdown(
+                    """
+                    **Température :**
+                    - Les températures à Koulikoro sont élevées, en particulier pendant la saison sèche. Les mois de mars à mai peuvent être les plus chauds, avec des températures diurnes pouvant atteindre les 40 degrés Celsius.
+                    
+
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),
+                dcc.Graph(figure=temperature_fig),
+                html.Hr(),
+                    #<!--------------------precipitation_fig---------------------------!>
+                dcc.Markdown(
+                    """
+                   **Précipitations :**
+                    - La région connaît une saison des pluies qui s'étend généralement de juin à septembre. Pendant cette période, Koulikoro reçoit des précipitations importantes, avec des averses parfois fortes. Cette saison est caractérisée par une augmentation de l'humidité.
+
+
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),
+                dcc.Graph(figure=precipitation_fig),
+                html.Hr(),
+                    #<!--------------------wind_speed_fig---------------------------!>
+                dcc.Markdown(
+                    """
+                   **Vent et sable :**
+                    - Koulikoro peut également être affectée par l'harmattan pendant la saison sèche. L'harmattan est un vent sec et poussiéreux qui souffle du Sahara, entraînant des conditions atmosphériques sèches et la présence de poussière dans l'air.
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),                   
+                dcc.Graph(figure=wind_speed_fig),
+                html.Hr(),
                 
-                # Graphique à barres initial
-                dcc.Graph(figure=fig_bar, id="new-data-graph"),  # Identifiant unique du graphique
-            ]
-        ),
-        
-        # Section pour le diagramme circulaire (Pie Chart)
-        html.Div(
-            [
-                html.H3("Pie Chart"),
-                dcc.Graph(figure=fig_pie, id="pie-chart"),  # Ajouter un autre graphique
-            ]
-        ),
-    ]
-)
+                    #<!--------------------daylight_sunshine---------------------------!>
+                dcc.Markdown(
+                    """
+                    La durée d'ensoleillement et la durée du jour sont liées, mais elles ne sont pas exactement les mêmes.
 
-# Callback pour mettre à jour dynamiquement les options de la deuxième liste déroulante en fonction de la base de données choisie
-@app.callback(
-    Output("variable-select-bar", "options"),
-    [Input("dataset-select", "value")]
-)
-def update_variable_options(selected_dataset):
-    # Utilisez la liste des colonnes associées à la base de données sélectionnée
-    if selected_dataset == "df_kayes_2023":
-        columns = ['temperature_2m_mean', 'apparent_temperature_mean', 'daylight_duration', 'sunshine_duration', 'rain_sum', 'wind_speed_10m_max', 'shortwave_radiation_sum']
-    elif selected_dataset == "df_kayes_2000_2009":
-        columns = ['temperature_2m_mean', 'apparent_temperature_mean', 'daylight_duration', 'sunshine_duration', 'rain_sum', 'wind_speed_10m_max', 'shortwave_radiation_sum']
-    elif selected_dataset == "df_kayes_2010_2023":
-        columns = ['temperature_2m_mean', 'apparent_temperature_mean', 'daylight_duration', 'sunshine_duration', 'rain_sum', 'wind_speed_10m_max', 'shortwave_radiation_sum']
-    
-    # Convertissez les colonnes en options attendues par la liste déroulante
-    variable_options = [{"label": col, "value": col} for col in columns]
-    
-    return variable_options
+                    - La durée du jour se réfère au temps total pendant lequel le soleil est au-dessus de l'horizon au cours d'une journée donnée. Elle comprend le temps du lever du soleil jusqu'au coucher du soleil.
 
-@app.callback(
-    Output("new-data-graph", "figure"),
-    [Input("dataset-select", "value"), Input("variable-select-bar", "value")]
-)
-def update_bar_chart(selected_dataset, selected_variable):
-    # Charger le jeu de données correspondant à la sélection
-    df_selected = globals()[selected_dataset]
-    
-    # Créer le graphique à barres mis à jour en fonction de la variable sélectionnée
-    fig_updated = px.bar(df_selected, x=selected_variable)
-    
-    return fig_updated
+                    - La durée d'ensoleillement, quant à elle, représente la période pendant laquelle le soleil brille effectivement et éclaire la surface de la Terre. Elle peut être légèrement plus courte que la durée du jour totale en raison de facteurs tels que l'épaisseur de l'atmosphère, les conditions météorologiques, ou la présence d'obstacles sur l'horizon.
+
+                    La durée d'ensoleillement est généralement abondante, surtout pendant la saison sèche. Les journées peuvent être caractérisées par une longue durée d'ensoleillement, contribuant aux températures élevées pendant la journée.
+
+                    Une durée d'ensoleillement prolongée est généralement associée à des températures plus élevées pendant la journée. Ces liens sont importants pour comprendre les caractéristiques climatiques spécifiques de la région.
+
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),
+                dcc.Graph(figure=daylight_sunshine),
+                html.Hr(),
+
+                    #<!--------------------temperature_rain---------------------------!>
+                dcc.Markdown(
+                    """
+                    - Pendant la saison des pluies, qui s'étend généralement de juin à septembre, les températures peuvent être relativement plus modérées en raison de l'augmentation des précipitations. Les averses fréquentes peuvent contribuer à des conditions plus fraîches.
+                    - La quantité de précipitations varie au cours de l'année, influençant ainsi la variation saisonnière des températures. Des années avec des précipitations plus importantes peuvent être associées à des températures plus douces.
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),
+                dcc.Graph(figure=temperature_rain),
+                html.Hr(),
+
+                    #<!--------------------rain_precipitaton---------------------------!>
+                dcc.Markdown(
+                    """
+                    - La durée de précipitation peut influencer la somme des précipitations, mais elle n'est pas le seul facteur déterminant. Une pluie intense et de courte durée peut générer une somme importante de précipitations, tandis qu'une pluie légère mais prolongée peut également contribuer à une somme substantielle.
+                    - L'intensité de la précipitation, c'est-à-dire la quantité de précipitations tombant par unité de temps, peut varier. Des pluies intenses sur une courte période peuvent générer une somme significative en peu de temps.
+                    """,
+                    style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
+                ),
+                dcc.Graph(figure=rain_precipitaton),
+                html.Hr(),
 
 
+
+    
+])
+#<!-----------------------------------------------------------------------------------------------------------!>
