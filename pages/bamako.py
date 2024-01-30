@@ -1,17 +1,15 @@
 #<!--------------------------------------------importations---------------------------------------------------------------!>
-import dash
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
-import dash_bootstrap_components as dbc
-from holoviews.plotting.plotly.dash import to_dash
-from dash import Input, Output, State, dcc, html, Dash
+from dash import dcc, html, Dash
 
 
 #<!--------------------------------------------data-loading---------------------------------------------------------------!>
 app = Dash(__name__)
 
 df_bamako_2023 = pd.read_csv("data/bamako_2023.csv")
+df_bamako_hourly_2023= pd.read_csv("base/bamako_hourly_2023.csv")
 df_bamako_2023['daylight_duration_hours'] = df_bamako_2023['daylight_duration'] / 3600
 df_bamako_2023['sunshine_duration_hours'] = df_bamako_2023['sunshine_duration'] / 3600
 #df_bamako_2010_2023 = pd.read_csv("data/bamako_2010-2023.csv")
@@ -37,6 +35,73 @@ temperature_rain = px.line(df_bamako_2023, x='date', y=['temperature_2m_mean', '
 rain_precipitaton = px.line(df_bamako_2023, x='date', y=['rain_sum', 'precipitation_hours'],
               title='Variation des précipitations et nombre d\'heures des précipitations  ',
               labels={'value': 'Valeur', 'variable': 'Variable', 'date': 'Date'})
+
+##############
+df_bamako_hourly_2023= pd.read_csv("base/bamako_hourly_2023.csv")
+
+df_bamako_hourly_2023['date'] = pd.to_datetime(df_bamako_hourly_2023['date'])
+
+df_bamako_hourly_2023['time_of_day'] = ['Day' if is_day else 'Night' for is_day in df_bamako_hourly_2023['is_day']]
+data_avg_temp = df_bamako_hourly_2023.groupby(['time_of_day', df_bamako_hourly_2023['date'].dt.date])['temperature_2m'].mean().reset_index()
+temp_day_night = px.line(data_avg_temp, x='date', y='temperature_2m', color='time_of_day',
+              title='Variation moyenne de la température du jour et de la nuit',
+              labels={'temperature_2m': 'Température Moyenne (°C)', 'date': 'Date'})
+##############
+
+temp_humd_fig = px.scatter(df_bamako_hourly_2023, x='temperature_2m', y='relative_humidity_2m', title='Corrélation entre Température et Humidité Relative',
+                 labels={'temperature_2m': 'Température (°C)', 'relative_humidity_2m': 'Humidité Relative (%)'})
+
+
+###############
+
+facette_day_night = px.scatter(df_bamako_hourly_2023, x='temperature_2m', y='relative_humidity_2m', color='is_day', facet_col='time_of_day',
+                 labels={'temperature_2m': 'Température (°C)', 'relative_humidity_2m': 'Humidité relative (%)'},
+                 title='Scatter Plot avec Facettes')
+                 
+##############
+
+polar_wind_fig = go.Figure()
+
+polar_wind_fig.add_trace(go.Barpolar(
+    r=df_bamako_hourly_2023['wind_speed_10m'],
+    theta=df_bamako_hourly_2023['wind_direction_10m'],
+    marker_color='rgba(75, 101, 132, 0.8)',
+    name='Vitesse du Vent'
+))
+
+polar_wind_fig.update_layout(
+    title='Rose des Vents - Distribution des Directions du Vent',
+    font_size=12,
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            range=[0, df_bamako_hourly_2023['wind_speed_10m'].max()]
+        )),
+    showlegend=False
+)
+
+################
+df_bamako_hourly_2023['month'] = df_bamako_hourly_2023['date'].dt.strftime('%B')
+
+month_fig = px.bar(df_bamako_hourly_2023.groupby('month')['temperature_2m'].mean().reset_index(),
+             x='month', y='temperature_2m',
+             title="Temperature Moyenne par Mois",
+             labels={'temperature_2m': 'Température Moyenne (°C)', 'month': 'Mois'},
+             category_orders={'month': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']}
+)
+             
+             
+#################
+
+relation_fig = px.scatter_polar(df_bamako_hourly_2023, r='temperature_2m', theta='wind_direction_10m',
+                       size='wind_speed_10m', color='relative_humidity_2m',
+                       title='Graphique Polaire - Variables Influencant la Température',
+                       labels={'temperature_2m': 'Température (°C)',
+                               'wind_direction_10m': 'Direction du Vent (degrés)',
+                               'wind_speed_10m': 'Vitesse du Vent (m/s)',
+                               'relative_humidity_2m': 'Humidité Relative (%)'})
+
+##################
 
 #<!--------------------------------------------layout---------------------------------------------------------------!>
 
@@ -70,6 +135,13 @@ layout = html.Div([
                     style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
                 ),
                 dcc.Graph(figure=temperature_fig),
+                dcc.Graph(figure=temp_day_night),
+                html.Hr(),
+                
+                dcc.Graph(figure=temp_humd_fig),
+                dcc.Graph(figure=facette_day_night),
+                dcc.Graph(figure=month_fig),
+
                 html.Hr(),
                     #<!--------------------precipitation_fig---------------------------!>
                 dcc.Markdown(
@@ -92,6 +164,10 @@ layout = html.Div([
                     style={'background-color': '#2a9fd6', 'padding': '20px', 'color': 'white'},
                 ),                   
                 dcc.Graph(figure=wind_speed_fig),
+                html.Hr(),
+                
+                dcc.Graph(figure=polar_wind_fig),
+                dcc.Graph(figure=relation_fig),
                 html.Hr(),
                 
                     #<!--------------------daylight_sunshine---------------------------!>
